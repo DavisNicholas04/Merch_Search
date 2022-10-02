@@ -8,10 +8,13 @@ import (
 	"log"
 	"merchSearch/model"
 	"merchSearch/service"
-	"strconv"
 )
 
 func Run() {
+	type statusAndSize struct {
+		StatusCode   int   `json:"statusCode"`
+		ResponseSize int64 `json:"responseSize"`
+	}
 	tag := "merch_search"
 
 	service.LoadDotEnv(".env")
@@ -25,10 +28,7 @@ func Run() {
 			log.Fatalln(fmt.Sprintf("could not connect to client\nerror: %s", clientErr))
 		}
 	}
-	clientErr := client.EchoSend("info", strconv.FormatInt(response.ContentLength, 10))
-	if clientErr != nil {
-		log.Fatalln(fmt.Sprintf("could not connect to client\nerror: %s", clientErr))
-	}
+	sAndR := statusAndSize{response.StatusCode, response.ContentLength}
 
 	bodyBytes, readBytesErr := io.ReadAll(response.Body)
 	defer func() {
@@ -41,6 +41,13 @@ func Run() {
 		log.Fatalln(readBytesErr)
 	}
 	var userCompletedResponse model.MalUserListResponse
+
+	clientErr := client.EchoSend(
+		"info", fmt.Sprintf("statusCode: %v\nresponseSize: %v", sAndR.StatusCode, len(bodyBytes)),
+	)
+	if clientErr != nil {
+		log.Fatalln(fmt.Sprintf("could not connect to client\nerror: %s", clientErr))
+	}
 
 	err := json.Unmarshal(bodyBytes, &userCompletedResponse)
 	if err != nil {
