@@ -1,5 +1,7 @@
 package model
 
+// json formatting is the same for both Anime and Manga
+
 type MalUserListResponse struct {
 	Data   []Data `json:"data"`
 	Paging Paging `json:"paging"`
