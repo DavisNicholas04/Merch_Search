@@ -9,67 +9,58 @@ import (
 	"log"
 	"merchSearch/model"
 	"net/http"
+	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
 
 func Run() {
 	LoadDotEnv(".env")
+	// will be replaced with db check if the users current session still has an active oauth token in the db
+	// which will send the users to the ebay sign it page. Upon success, they will be sent to the landing page
+	// which will resume the program.
+	for {
+		expirationTime, _ := strconv.ParseInt(os.Getenv("EBAY_BEARER_TOKEN_EXPIRATION"), 10, 64)
+		ifEbayTokenExpired := expirationTime < time.Now().Unix()
+		if ifEbayTokenExpired {
+			tokenGenerator()
+		}
+		// Instantiate Clients
+		animeTag := "anime_search"
+		ebayTag := "ebay_search"
+		animeClient := loggly.New(animeTag)
+		ebayClient := loggly.New(ebayTag)
 
-	// Instantiate Clients
-	animeTag := "anime_search"
-	ebayTag := "ebay_search"
-	animeClient := loggly.New(animeTag)
-	ebayClient := loggly.New(ebayTag)
-
-	var userCompletedResponse model.MalUserListResponse
-	animeBodyBytes := GetMalBytes(animeClient, AnimeListCompletedEndpoint)
-	// Convert JSON into go type definition
-	animeUnmarshalErr := json.Unmarshal(animeBodyBytes, &userCompletedResponse)
-	unmarshalError(animeUnmarshalErr, animeClient)
-	ebayItems := searchMalResponse(ebayClient, userCompletedResponse, "Ascending")
-	fmt.Println(ebayItems)
-	fmt.Println("---END---")
+		var userCompletedResponse model.MalUserListResponse
+		animeBodyBytes := RequestMalBytes(animeClient, AnimeListCompletedEndpoint)
+		// Convert JSON into go type definition
+		animeUnmarshalErr := json.Unmarshal(animeBodyBytes, &userCompletedResponse)
+		unmarshalError(animeUnmarshalErr, animeClient)
+		ebayItems := searchEbay(ebayClient, userCompletedResponse, "Ascending")
+		fmt.Println(ebayItems)
+		fmt.Println("---END---")
+		time.Sleep(1 * time.Hour)
+	}
 }
 
-func GetEbayBytes(ebayClient *loggly.ClientType, title string, sort string) []byte {
+func RequestEbayBytes(ebayClient *loggly.ClientType, title string, sort string) []byte {
 
 	response, httpErr := search(title, 0, 3, sort)
 	httpErrorCheck(httpErr, ebayClient)
 
-	bodyBytes, readBytesErr := io.ReadAll(response.Body)
-	readBytesErrorCheck(readBytesErr, ebayClient)
-
-	deferResponseBodyClose(response)
-
-	// send loggly msg
-	clientErr := ebayClient.EchoSend(
-		"info", fmt.Sprintf("statusCode: %v\nresponseSize: %v", response.StatusCode, len(bodyBytes)),
-	)
-	clientErrorCheck(clientErr)
-
-	return bodyBytes
+	return GetBytes(response, ebayClient)
 }
 
-func searchMalResponse(ebayClient *loggly.ClientType, malRes model.MalUserListResponse, sort string) []model.ItemSummaries {
-	var ebayResponseModel model.EbaySearchResponse
-	var itemSummaries []model.ItemSummaries
-	for _, data := range malRes.Data {
-		title := strings.ReplaceAll(data.Node.Title, " ", "+")
-		ebayBytes := GetEbayBytes(ebayClient, title, sort)
-		ebayUnmarshalErr := json.Unmarshal(ebayBytes, &ebayResponseModel)
-		unmarshalError(ebayUnmarshalErr, ebayClient)
-		itemSummaries = append(itemSummaries, ebayResponseModel.ItemSummaries...)
-		time.Sleep(1 * time.Second)
-	}
-	return itemSummaries
-}
-
-func GetMalBytes(client *loggly.ClientType, endpoint string) []byte {
+func RequestMalBytes(malClient *loggly.ClientType, endpoint string) []byte {
 	response, httpErr := GetCompleted(endpoint, "Curiossity")
-	httpErrorCheck(httpErr, client)
+	httpErrorCheck(httpErr, malClient)
 
+	return GetBytes(response, malClient)
+}
+
+func GetBytes(response *http.Response, client *loggly.ClientType) []byte {
 	bodyBytes, readBytesErr := io.ReadAll(response.Body)
 	readBytesErrorCheck(readBytesErr, client)
 
@@ -84,9 +75,23 @@ func GetMalBytes(client *loggly.ClientType, endpoint string) []byte {
 	return bodyBytes
 }
 
+func searchEbay(ebayClient *loggly.ClientType, malRes model.MalUserListResponse, sort string) []model.ItemSummaries {
+	var ebayResponseModel model.EbaySearchResponse
+	var itemSummaries []model.ItemSummaries
+	for _, data := range malRes.Data {
+		title := strings.ReplaceAll(data.Node.Title, " ", "+")
+		ebayBytes := RequestEbayBytes(ebayClient, title, sort)
+		ebayUnmarshalErr := json.Unmarshal(ebayBytes, &ebayResponseModel)
+		unmarshalError(ebayUnmarshalErr, ebayClient)
+		itemSummaries = append(itemSummaries, ebayResponseModel.ItemSummaries...)
+		time.Sleep(1 * time.Second)
+	}
+	return itemSummaries
+}
+
 func httpErrorCheck(httpErr error, client *loggly.ClientType) {
 	if httpErr != nil {
-		clientErr := client.EchoSend("error", fmt.Sprintf("Was not able to pull users Completed list\nerror: %s", httpErr))
+		clientErr := client.EchoSend("error", fmt.Sprintf("Was not able to connect to endpoint list\nerror: %s", httpErr))
 		if clientErr != nil {
 			log.Fatalln(fmt.Sprintf("could not connect to client\nerror: %s", clientErr))
 		}
