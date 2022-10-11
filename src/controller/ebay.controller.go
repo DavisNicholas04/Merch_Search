@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"github.com/jamespearly/loggly"
 	"merchSearch/model"
+	"merchSearch/service"
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 const (
@@ -49,10 +48,10 @@ const (
 	ScopeValue        = "https://api.ebay.com/oauth/api_scope"
 
 	// tagRoot
-	tagRoot = "controller.ebay.controller.go."
+	TagRoot = "controller.ebay.controller.go."
 )
 
-func search(q string, offset int, limit int, sort string) (response *http.Response, err error) {
+func Search(q string, offset int, limit int, sort string) (response *http.Response, err error) {
 	var f = fmt.Sprintf
 
 	client := &http.Client{}
@@ -65,10 +64,10 @@ func search(q string, offset int, limit int, sort string) (response *http.Respon
 	return
 }
 
-func tokenGenerator(wg *sync.WaitGroup) {
+func TokenGenerator(wg *sync.WaitGroup) {
 
 	// Instantiate Client
-	tokenGeneratorTag := fmt.Sprintf("%stokenGenerator()", tagRoot)
+	tokenGeneratorTag := fmt.Sprintf("%stokenGenerator()", TagRoot)
 	tokenGenClient := loggly.New(tokenGeneratorTag)
 
 	// declaration of a token model
@@ -87,43 +86,15 @@ func tokenGenerator(wg *sync.WaitGroup) {
 	req.Header.Set(ContentType, XWwwFormUrlencoded)
 	req.Header.Set(Authorization, os.Getenv("EBAY_CREDENTIALS"))
 	response, err := client.Do(req)
-	httpErrorCheck(err, tokenGenClient)
+	service.HttpErrorCheck(err, tokenGenClient)
 
 	// byte conversion and unmarshalling of token response info
-	bodyBytes := GetBytes(response, tokenGenClient)
+	bodyBytes := service.GetBytes(response, tokenGenClient)
 
 	// initialization of the token model tokenModel
 	tokenUnmarshalError := json.Unmarshal(bodyBytes, &tokenModel)
-	unmarshalError(tokenUnmarshalError, tokenGenClient)
+	service.UnmarshalError(tokenUnmarshalError, tokenGenClient)
 
-	setTokenEnvs(tokenModel)
+	service.SetTokenEnvs(tokenModel)
 	wg.Done()
-}
-
-// to be replaced with sending token info to a db
-func setTokenEnvs(tokenModel model.TokenInfo) {
-	// Instantiate Client
-	tokenGeneratorTag := fmt.Sprintf("%ssetTokenEnvs()", tagRoot)
-	tokenGenClient := loggly.New(tokenGeneratorTag)
-
-	setBearerErr := os.Setenv("EBAY_BEARER_TOKEN", fmt.Sprintf("Bearer %s", tokenModel.AccessToken))
-	if setBearerErr != nil {
-		clientErr := tokenGenClient.EchoSend("error", "Could not set Ebay Bearer token environment Variable")
-		clientErrorCheck(clientErr)
-	}
-	// adds the time till expiration to the current time and converts it to a string in preparation of env/db storage
-	dateOfTokenExpiration := strconv.FormatInt(
-		time.Now().Add(time.Second*time.Duration(tokenModel.ExpiresIn)).Unix(),
-		10,
-	)
-	setExpiryErr := os.Setenv("EBAY_BEARER_TOKEN_EXPIRATION", dateOfTokenExpiration)
-	if setExpiryErr != nil {
-		clientErr := tokenGenClient.EchoSend("error", "Could not set Ebay token timer token environment Variable")
-		clientErrorCheck(clientErr)
-	}
-	setTokenTypeErr := os.Setenv("EBAY_TOKEN_TYPE", tokenModel.TokenType)
-	if setTokenTypeErr != nil {
-		clientErr := tokenGenClient.EchoSend("error", "Could not set Ebay token type environment Variable")
-		clientErrorCheck(clientErr)
-	}
 }
