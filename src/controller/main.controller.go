@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/jamespearly/loggly"
 	"github.com/joho/godotenv"
@@ -13,19 +14,28 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
 func Run() {
-	LoadDotEnv(".env")
+
+	var wg sync.WaitGroup
+	//if running on a local machine use the .env file
+	if FileExist(".env") {
+		LoadDotEnv(".env")
+	}
 	// will be replaced with db check if the users current session still has an active oauth token in the db
 	// which will send the users to the ebay sign it page. Upon success, they will be sent to the landing page
 	// which will resume the program.
 	for {
-		expirationTime, _ := strconv.ParseInt(os.Getenv("EBAY_BEARER_TOKEN_EXPIRATION"), 10, 64)
-		ifEbayTokenExpired := expirationTime < time.Now().Unix()
-		if ifEbayTokenExpired {
-			tokenGenerator()
+
+		if TokenExpiredOrDoesntExist() {
+			fmt.Println("authToken expired. generating new token. . .")
+			wg.Add(1)
+			tokenGenerator(&wg)
+			wg.Wait()
+			fmt.Println("authToken generated")
 		}
 		// Instantiate Clients
 		animeTag := "anime_search"
@@ -41,7 +51,7 @@ func Run() {
 		ebayItems := searchEbay(ebayClient, userCompletedResponse, "Ascending")
 		fmt.Println(ebayItems)
 		fmt.Println("---END---")
-		time.Sleep(1 * time.Hour)
+		time.Sleep(2 * time.Minute)
 	}
 }
 
@@ -147,4 +157,26 @@ func LoadDotEnv(filenames ...string) {
 	if err1 != nil {
 		log.Fatalln("Error loading .env file")
 	}
+}
+
+func FileExist(file string) bool {
+	_, err := os.Stat(file)
+	if errors.Is(err, os.ErrNotExist) {
+		return false
+	} else {
+		return true
+	}
+}
+
+func TokenExpiredOrDoesntExist() bool {
+	expirationTime, _ := strconv.ParseInt(os.Getenv("EBAY_BEARER_TOKEN_EXPIRATION"), 10, 64)
+	EbayTokenExpired := expirationTime < time.Now().Unix()
+	TokenNotExist := !(first(os.LookupEnv("EBAY_BEARER_TOKEN")) &&
+		first(os.LookupEnv("EBAY_BEARER_TOKEN_EXPIRATION")) &&
+		first(os.LookupEnv("EBAY_TOKEN_TYPE")))
+	return EbayTokenExpired || TokenNotExist
+}
+
+func first(key string, isExist bool) bool {
+	return isExist
 }

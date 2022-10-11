@@ -2,4 +2,3 @@
 .idea
 .dockerignore
 docker-compose.yaml
-Dockerfile

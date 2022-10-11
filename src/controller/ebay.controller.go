@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -48,7 +49,7 @@ const (
 	ScopeValue        = "https://api.ebay.com/oauth/api_scope"
 
 	// tagRoot
-	tagRoot = "/controller/ebay.controller.go/"
+	tagRoot = "controller.ebay.controller.go."
 )
 
 func search(q string, offset int, limit int, sort string) (response *http.Response, err error) {
@@ -64,7 +65,7 @@ func search(q string, offset int, limit int, sort string) (response *http.Respon
 	return
 }
 
-func tokenGenerator() {
+func tokenGenerator(wg *sync.WaitGroup) {
 
 	// Instantiate Client
 	tokenGeneratorTag := fmt.Sprintf("%stokenGenerator()", tagRoot)
@@ -96,6 +97,7 @@ func tokenGenerator() {
 	unmarshalError(tokenUnmarshalError, tokenGenClient)
 
 	setTokenEnvs(tokenModel)
+	wg.Done()
 }
 
 // to be replaced with sending token info to a db
