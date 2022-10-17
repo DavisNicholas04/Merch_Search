@@ -15,7 +15,6 @@ import (
 const (
 	MalRoot                    = "https://api.myanimelist.net/v2/"
 	AnimeListCompletedEndpoint = "users/%s/animelist?status=completed&limit=%d"
-	//MangaListCompletedEndpoint = "users/%s/mangalist?status=completed"
 )
 
 func GetAnime(malClient *loggly.ClientType, endPoint string, user string, limit int) []byte {
@@ -50,10 +49,3 @@ func GetCompletedCount(malClient *loggly.ClientType, endPoint string, user strin
 	}
 	return numOfCompletedAnime
 }
-
-//func RequestMalBytes(malClient *loggly.ClientType, endpoint string, limit int) []byte {
-//	response, httpErr := GetAnimeNoAuth(endpoint, "Curiossity", limit)
-//	service.HttpErrorCheck(httpErr, malClient)
-//
-//	return service.GetBytes(response, malClient)
-//}

@@ -54,28 +54,15 @@ type AdditionalImages struct {
 }
 
 type ItemSummaries struct {
-	ItemId string `json:"itemId"`
-	Title  string `json:"title"`
-	//LeafCategoryIds          []string           `json:"leafCategoryIds"`
-	Categories []Categories `json:"categories"`
-	Image      Image        `json:"image"`
-	Price      Price        `json:"price"`
-	//ItemHref   string       `json:"itemHref"`
-	Seller    Seller `json:"seller"`
-	Condition string `json:"condition"`
-	//ConditionId              string             `json:"conditionId"`
-	ThumbnailImages []ThumbnailImages `json:"thumbnailImages"`
-	//ShippingOptions          []ShippingOptions  `json:"shippingOptions"`
-	//BuyingOptions            []string           `json:"buyingOptions"`
-	//ItemAffiliateWebURL      string             `json:"itemAffiliateWebUrl"`
-	ItemWebURL string `json:"itemWebUrl"`
-	//ItemLocation             ItemLocation       `json:"itemLocation"`
+	ItemId           string             `json:"itemId"`
+	Title            string             `json:"title"`
+	Categories       []Categories       `json:"categories"`
+	Image            Image              `json:"image"`
+	Price            Price              `json:"price"`
+	Seller           Seller             `json:"seller"`
+	Condition        string             `json:"condition"`
+	ThumbnailImages  []ThumbnailImages  `json:"thumbnailImages"`
+	ItemWebURL       string             `json:"itemWebUrl"`
 	AdditionalImages []AdditionalImages `json:"additionalImages"`
 	AdultOnly        bool               `json:"adultOnly"`
-	//LegacyItemId             string             `json:"legacyItemId"`
-	//AvailableCoupons         bool               `json:"availableCoupons"`
-	//ItemCreationDate         time.Time          `json:"itemCreationDate"`
-	//TopRatedBuyingExperience bool               `json:"topRatedBuyingExperience"`
-	//PriorityListing          bool               `json:"priorityListing"`
-	//ListingMarketplaceId     string             `json:"listingMarketplaceId"`
 }
