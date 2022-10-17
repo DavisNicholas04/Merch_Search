@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 const (
@@ -52,10 +53,9 @@ const (
 )
 
 func Search(q string, offset int, limit int, sort string) (response *http.Response, err error) {
-	var f = fmt.Sprintf
 
 	client := &http.Client{}
-	req, _ := http.NewRequest("GET", EbayRoot+f(EbaySearchEndpoint, q, offset, limit, sort), nil)
+	req, _ := http.NewRequest("GET", EbayRoot+F(EbaySearchEndpoint, q, offset, limit, sort), nil)
 	req.Header.Set(EbayCMarketplaceIdKey, EbayCMarketplaceIdValueUs)
 	req.Header.Set(ContentType, ApplicationJson)
 	req.Header.Set(XEbayCEnduserctxKey, XEbayCEnduserctxValue)
@@ -97,4 +97,38 @@ func TokenGenerator(wg *sync.WaitGroup) {
 
 	service.SetTokenEnvs(tokenModel)
 	wg.Done()
+}
+
+func RequestEbayBytes(ebayClient *loggly.ClientType, title string, sort string) []byte {
+
+	response, httpErr := Search(title, 0, 3, sort)
+	service.HttpErrorCheck(httpErr, ebayClient)
+
+	return service.GetBytes(response, ebayClient)
+}
+
+func GenerateNewTokenIfNotExist() {
+	var wg sync.WaitGroup
+
+	if service.TokenExpiredOrDoesntExist() {
+		fmt.Println("authToken expired. generating new token. . .")
+		wg.Add(1)
+		TokenGenerator(&wg)
+		wg.Wait()
+		fmt.Println("authToken generated")
+	}
+}
+
+func SearchItemsOnEbay(ebayClient *loggly.ClientType, malRes model.MalUserListResponse, sort string) []model.ItemSummaries {
+	var ebayResponseModel model.EbaySearchResponse
+	var itemSummaries []model.ItemSummaries
+	for _, data := range malRes.Data {
+		title := strings.ReplaceAll(data.Node.Title, " ", "+")
+		ebayBytes := RequestEbayBytes(ebayClient, title, sort)
+		ebayUnmarshalErr := json.Unmarshal(ebayBytes, &ebayResponseModel)
+		service.UnmarshalError(ebayUnmarshalErr, ebayClient)
+		itemSummaries = append(itemSummaries, ebayResponseModel.ItemSummaries...)
+		time.Sleep(1 * time.Second)
+	}
+	return itemSummaries
 }
