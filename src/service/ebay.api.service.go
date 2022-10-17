@@ -1,22 +1,20 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/jamespearly/loggly"
-	"merchSearch/controller"
 	"merchSearch/model"
 	"os"
 	"strconv"
-	"strings"
-	"sync"
 	"time"
 )
+
+const TagRoot = "controller.ebay.controller.go."
 
 // to be replaced with sending token info to a db
 func SetTokenEnvs(tokenModel model.TokenInfo) {
 	// Instantiate Client
-	tokenGeneratorTag := fmt.Sprintf("%ssetTokenEnvs()", controller.TagRoot)
+	tokenGeneratorTag := fmt.Sprintf("%ssetTokenEnvs()", TagRoot)
 	tokenGenClient := loggly.New(tokenGeneratorTag)
 
 	setBearerErr := os.Setenv("EBAY_BEARER_TOKEN", fmt.Sprintf("Bearer %s", tokenModel.AccessToken))
@@ -38,40 +36,6 @@ func SetTokenEnvs(tokenModel model.TokenInfo) {
 	if setTokenTypeErr != nil {
 		clientErr := tokenGenClient.EchoSend("error", "Could not set Ebay token type environment Variable")
 		ClientErrorCheck(clientErr)
-	}
-}
-
-func SearchEbay(ebayClient *loggly.ClientType, malRes model.MalUserListResponse, sort string) []model.ItemSummaries {
-	var ebayResponseModel model.EbaySearchResponse
-	var itemSummaries []model.ItemSummaries
-	for _, data := range malRes.Data {
-		title := strings.ReplaceAll(data.Node.Title, " ", "+")
-		ebayBytes := RequestEbayBytes(ebayClient, title, sort)
-		ebayUnmarshalErr := json.Unmarshal(ebayBytes, &ebayResponseModel)
-		UnmarshalError(ebayUnmarshalErr, ebayClient)
-		itemSummaries = append(itemSummaries, ebayResponseModel.ItemSummaries...)
-		time.Sleep(1 * time.Second)
-	}
-	return itemSummaries
-}
-
-func RequestEbayBytes(ebayClient *loggly.ClientType, title string, sort string) []byte {
-
-	response, httpErr := controller.Search(title, 0, 3, sort)
-	HttpErrorCheck(httpErr, ebayClient)
-
-	return GetBytes(response, ebayClient)
-}
-
-func GenerateNewTokenIfNotExist() {
-	var wg sync.WaitGroup
-
-	if TokenExpiredOrDoesntExist() {
-		fmt.Println("authToken expired. generating new token. . .")
-		wg.Add(1)
-		controller.TokenGenerator(&wg)
-		wg.Wait()
-		fmt.Println("authToken generated")
 	}
 }
 
