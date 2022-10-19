@@ -1,49 +1,136 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/jamespearly/loggly"
+	"merchSearch/handler"
 	"merchSearch/model"
+	"merchSearch/utils"
+	"net/http"
+	"net/url"
 	"os"
-	"strconv"
+	"strings"
+	"sync"
 	"time"
 )
 
-const TagRoot = "controller.ebay.controller.go."
+const (
+	// Common HEADER KEYS
 
-// to be replaced with sending token info to a db
-func SetTokenEnvs(tokenModel model.TokenInfo) {
+	Authorization = "Authorization"
+	ContentType   = "Content-Type"
+
+	// Common Header Values
+
+	ApplicationJson    = "application/json"
+	XWwwFormUrlencoded = "application/x-www-form-urlencoded"
+
+	// search function constant variables
+
+	EbayRoot           = "https://api.sandbox.ebay.com/buy/browse/v1/"
+	EbaySearchEndpoint = "item_summary/search?q=%s+anime&offset=%d&limit=%d&sort=%s" // EbaySearchEndpoint URI parameters: q, offset, limit, sort
+
+	// Ebay Search Headers
+
+	EbayCMarketplaceIdKey     = "X-EBAY-C-MARKETPLACE-ID"
+	EbayCMarketplaceIdValueUs = "EBAY_US"
+	XEbayCEnduserctxKey       = "X-EBAY-C-ENDUSERCTX"
+	XEbayCEnduserctxValue     = "affiliateCampaignId=<ePNCampaignId>,affiliateReferenceId=<referenceId>"
+
+	// tokenGenerator function constant variables
+
+	EbayTokenGeneratorEndpoint = "https://api.sandbox.ebay.com/identity/v1/oauth2/token?"
+
+	// Ebay Oauth Token Generator Body
+
+	GrantType         = "grant_type"
+	ClientCredentials = "client_credentials"
+	Scope             = "scope"
+	ScopeValue        = "https://api.ebay.com/oauth/api_scope"
+
+	// tagRoot
+	TagRoot = "controller.ebay.controller.go."
+)
+
+func Search(q string, offset int, limit int, sort string) (response *http.Response, err error) {
+	client := &http.Client{}
+	req, _ := http.NewRequest("GET", EbayRoot+F(EbaySearchEndpoint, q, offset, limit, sort), nil)
+	req.Header.Set(EbayCMarketplaceIdKey, EbayCMarketplaceIdValueUs)
+	req.Header.Set(ContentType, ApplicationJson)
+	req.Header.Set(XEbayCEnduserctxKey, XEbayCEnduserctxValue)
+	req.Header.Set(Authorization, os.Getenv("EBAY_BEARER_TOKEN"))
+	response, err = client.Do(req)
+	return
+}
+
+func TokenGenerator(wg *sync.WaitGroup) {
+
 	// Instantiate Client
-	tokenGeneratorTag := fmt.Sprintf("%ssetTokenEnvs()", TagRoot)
+	tokenGeneratorTag := fmt.Sprintf("%stokenGenerator()", TagRoot)
 	tokenGenClient := loggly.New(tokenGeneratorTag)
 
-	setBearerErr := os.Setenv("EBAY_BEARER_TOKEN", fmt.Sprintf("Bearer %s", tokenModel.AccessToken))
-	if setBearerErr != nil {
-		clientErr := tokenGenClient.EchoSend("error", "Could not set Ebay Bearer token environment Variable")
-		ClientErrorCheck(clientErr)
+	// declaration of a token model
+	var tokenModel model.TokenInfo
+
+	// set tokenGenerator body
+	unencodedBody := url.Values{
+		GrantType: {ClientCredentials},
+		Scope:     {ScopeValue},
 	}
-	// adds the time till expiration to the current time and converts it to a string in preparation of env/db storage
-	dateOfTokenExpiration := strconv.FormatInt(
-		time.Now().Add(time.Second*time.Duration(tokenModel.ExpiresIn)).Unix(),
-		10,
-	)
-	setExpiryErr := os.Setenv("EBAY_BEARER_TOKEN_EXPIRATION", dateOfTokenExpiration)
-	if setExpiryErr != nil {
-		clientErr := tokenGenClient.EchoSend("error", "Could not set Ebay token timer token environment Variable")
-		ClientErrorCheck(clientErr)
-	}
-	setTokenTypeErr := os.Setenv("EBAY_TOKEN_TYPE", tokenModel.TokenType)
-	if setTokenTypeErr != nil {
-		clientErr := tokenGenClient.EchoSend("error", "Could not set Ebay token type environment Variable")
-		ClientErrorCheck(clientErr)
+	encodedBody := unencodedBody.Encode()
+
+	// make http request to ebay oauth generator endpoint
+	client := &http.Client{}
+	req, _ := http.NewRequest("POST", EbayTokenGeneratorEndpoint, strings.NewReader(encodedBody))
+	req.Header.Set(ContentType, XWwwFormUrlencoded)
+	req.Header.Set(Authorization, os.Getenv("EBAY_CREDENTIALS"))
+	response, err := client.Do(req)
+	handler.HttpErrorCheck(err, tokenGenClient)
+
+	// byte conversion and unmarshalling of token response info
+	bodyBytes := utils.GetBytes(response, tokenGenClient)
+
+	// initialization of the token model tokenModel
+	tokenUnmarshalError := json.Unmarshal(bodyBytes, &tokenModel)
+	handler.UnmarshalError(tokenUnmarshalError, tokenGenClient, string(bodyBytes))
+
+	utils.SetTokenEnvs(tokenModel)
+	wg.Done()
+}
+
+func RequestEbayBytes(ebayClient *loggly.ClientType, title string, sort string) []byte {
+
+	response, httpErr := Search(title, 0, 3, sort)
+	handler.HttpErrorCheck(httpErr, ebayClient)
+
+	return utils.GetBytes(response, ebayClient)
+}
+
+func GenerateNewTokenIfNotExist() {
+	var wg sync.WaitGroup
+
+	if utils.TokenExpiredOrDoesntExist() {
+		fmt.Println("authToken expired. generating new token. . .")
+		wg.Add(1)
+		TokenGenerator(&wg)
+		wg.Wait()
+		fmt.Println("authToken generated")
 	}
 }
 
-func TokenExpiredOrDoesntExist() bool {
-	expirationTime, _ := strconv.ParseInt(os.Getenv("EBAY_BEARER_TOKEN_EXPIRATION"), 10, 64)
-	EbayTokenExpired := expirationTime < time.Now().Unix()
-	TokenNotExist := !(first(os.LookupEnv("EBAY_BEARER_TOKEN")) &&
-		first(os.LookupEnv("EBAY_BEARER_TOKEN_EXPIRATION")) &&
-		first(os.LookupEnv("EBAY_TOKEN_TYPE")))
-	return EbayTokenExpired || TokenNotExist
+func SearchItemsOnEbay(ebayClient *loggly.ClientType, malRes model.MalUserListResponse, sort string) []model.ItemSummaries {
+	var ebayResponseModel model.EbaySearchResponse
+	var itemSummaries []model.ItemSummaries
+	for _, data := range malRes.Data {
+		title := strings.ReplaceAll(
+			utils.RemoveNonAlphaNums(data.Node.Title), " ", "+",
+		)
+		ebayBytes := RequestEbayBytes(ebayClient, title, sort)
+		ebayUnmarshalErr := json.Unmarshal(ebayBytes, &ebayResponseModel)
+		handler.UnmarshalError(ebayUnmarshalErr, ebayClient, title)
+		itemSummaries = append(itemSummaries, ebayResponseModel.ItemSummaries...)
+		time.Sleep(1 * time.Second)
+	}
+	return itemSummaries
 }
