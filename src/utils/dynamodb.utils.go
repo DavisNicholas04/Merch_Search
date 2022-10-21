@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -20,16 +21,19 @@ func CreateDynamoDBClient() *dynamodb.DynamoDB {
 			session.Options{
 				SharedConfigState: session.SharedConfigEnable,
 			}))
-
 	// Create an Amazon S3 service client
 	return dynamodb.New(session)
 }
 
 func (repo *DynamoDBRepo) Save(post *model.UserEntry, wg *sync.WaitGroup) (*model.UserEntry, error) {
-
+	dynamodbLoggly := InstantiateClient("DynamoDB.create.client")
+	dynamodbputLoggly := InstantiateClient("DynamoDB.put.item")
 	// creation of a new DynamoDb client
 	dynamodbClient := CreateDynamoDBClient()
-
+	err := dynamodbLoggly.EchoSend("info", "client created")
+	if err != nil {
+		return nil, err
+	}
 	attributeVal, err := dynamodbattribute.MarshalMap(post)
 	if err != nil {
 		log.Fatalf("Got error marshalling new movie item: %s", err)
@@ -42,6 +46,10 @@ func (repo *DynamoDBRepo) Save(post *model.UserEntry, wg *sync.WaitGroup) (*mode
 	_, err = dynamodbClient.PutItem(item)
 	if err != nil {
 		log.Fatalf("Got error calling PutItem: %s", err)
+	}
+	err2 := dynamodbputLoggly.EchoSend("info", fmt.Sprintf("item {%s} added successfully", post.ItemId))
+	if err2 != nil {
+		return nil, err2
 	}
 	wg.Done()
 

@@ -21,7 +21,7 @@ func Run() {
 	animeClient := utils.InstantiateClient("anime_search")
 	ebayClient := utils.InstantiateClient("ebay_search")
 	dynamodbTable := utils.DynamoDBRepo{TableName: os.Getenv("DYNAMO_DB_TABLE_NAME")}
-
+	// compatible
 	for {
 		// will be replaced with db check if the users current session still has an active oauth token in the db
 		// which will send the users to the ebay sign it page. Upon success, they will be sent to the landing page
