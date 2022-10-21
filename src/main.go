@@ -1,9 +1,8 @@
 // This package is used to test the Loggly package
 package main
 
-import "merchSearch/controller"
+import "merchSearch/service"
 
 func main() {
-	//service.Run()
-	controller.SetUp()
+	service.Run()
 }
