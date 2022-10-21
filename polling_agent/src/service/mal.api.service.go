@@ -6,9 +6,9 @@ import (
 	"github.com/jamespearly/loggly"
 	"math"
 	"math/rand"
-	"merchSearch/handler"
-	"merchSearch/model"
-	"merchSearch/utils"
+	"polling_agent/handler"
+	"polling_agent/model"
+	"polling_agent/utils"
 	"time"
 )
 

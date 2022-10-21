@@ -3,10 +3,10 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"merchSearch/handler"
-	"merchSearch/model"
-	"merchSearch/utils"
 	"os"
+	"polling_agent/handler"
+	"polling_agent/model"
+	"polling_agent/utils"
 	"time"
 )
 

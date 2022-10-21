@@ -1,3 +1,7 @@
+// this package is to be removed upon making the https://github.com/DavisNicholas04/Merch_Search public
+// in its place both: github.com/DavisNicholas04/Merch_Search/blob/main/polling_agent/src/utils/basic.utils.go
+// will be imported
+
 package utils
 
 import (
@@ -9,9 +13,13 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"polling_agent/handler"
 	"regexp"
+	"server/handler"
 )
+
+func InstantiateClient(tag string) *loggly.ClientType {
+	return loggly.New(tag)
+}
 
 func RemoveNonAlphaNums(str string) string {
 	var nonAlphanumericRegex = regexp.MustCompile(`[^a-zA-Z0-9 ]+`)

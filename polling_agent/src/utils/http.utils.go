@@ -2,9 +2,9 @@ package utils
 
 import (
 	"github.com/jamespearly/loggly"
-	"merchSearch/handler"
 	"net/http"
 	"os"
+	"polling_agent/handler"
 )
 
 func HttpGet(endPoint string, client *loggly.ClientType) *http.Response {

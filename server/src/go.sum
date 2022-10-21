@@ -1,0 +1,6 @@
+github.com/TwiN/go-color v1.2.0 h1:Z18GljqDd5aSmIBYwp2JKLH9H63fd79MzFdW79fDt2k=
+github.com/TwiN/go-color v1.2.0/go.mod h1:0QTVEPlu+AoCyTrho7bXbVkrCkVpdQr7YF7PYWEtSxM=
+github.com/jamespearly/loggly v0.0.0-20220929110912-1d839b0715fa h1:uYgvbQ9omXKUngu4J06jtBh4qkh7b/zemvhR1Wj3p0E=
+github.com/jamespearly/loggly v0.0.0-20220929110912-1d839b0715fa/go.mod h1:nsvBEjxR4pTLLz16KzrVyH+CFB6I3tv5eC06sZA+0uo=
+github.com/joho/godotenv v1.4.0 h1:3l4+N6zfMWnkbPEXKng2o2/MR5mSwTrBih4ZEkkz1lg=
+github.com/joho/godotenv v1.4.0/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=

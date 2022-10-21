@@ -1,4 +1,4 @@
-module merchSearch
+module polling_agent
 
 go 1.19
 

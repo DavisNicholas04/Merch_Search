@@ -3,9 +3,9 @@ package utils
 import (
 	"fmt"
 	"github.com/jamespearly/loggly"
-	"merchSearch/handler"
-	"merchSearch/model"
 	"os"
+	"polling_agent/handler"
+	"polling_agent/model"
 	"strconv"
 	"time"
 )

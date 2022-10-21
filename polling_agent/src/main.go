@@ -1,7 +1,6 @@
-// This package is used to test the Loggly package
 package main
 
-import "merchSearch/service"
+import "polling_agent/service"
 
 func main() {
 	service.Run()
