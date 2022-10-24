@@ -3,10 +3,10 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"ndavis20_server/handler"
+	"ndavis20_server/utils"
 	"net/http"
 	"os"
-	"server/handler"
-	"server/utils"
 	"time"
 )
 

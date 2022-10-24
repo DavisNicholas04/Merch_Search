@@ -2,9 +2,9 @@ package main
 
 import (
 	"log"
+	"ndavis20_server/controller"
+	"ndavis20_server/utils"
 	"net/http"
-	"server/controller"
-	"server/utils"
 )
 
 func main() {

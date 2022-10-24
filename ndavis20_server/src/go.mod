@@ -1,4 +1,4 @@
-module server
+module ndavis20_server
 
 go 1.19
 

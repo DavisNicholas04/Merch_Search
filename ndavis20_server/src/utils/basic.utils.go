@@ -11,10 +11,10 @@ import (
 	"github.com/joho/godotenv"
 	"io"
 	"log"
+	"ndavis20_server/handler"
 	"net/http"
 	"os"
 	"regexp"
-	"server/handler"
 )
 
 func InstantiateClient(tag string) *loggly.ClientType {
