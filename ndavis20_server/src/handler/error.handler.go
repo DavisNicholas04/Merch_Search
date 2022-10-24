@@ -54,3 +54,18 @@ func HttpErrorCheck(httpErr error, client *loggly.ClientType) {
 		}
 	}
 }
+
+func MarshalError(unmarshalErr error, client *loggly.ClientType, modelName string) {
+	if unmarshalErr != nil {
+		clientErr := client.EchoSend(
+			"error", fmt.Sprintf(
+				"Was not able to marshal the %v: %s\n",
+				modelName,
+				unmarshalErr,
+			),
+		)
+		if clientErr != nil {
+			log.Fatalln(fmt.Sprintf("could not connect to client\nerror: %s", clientErr))
+		}
+	}
+}
