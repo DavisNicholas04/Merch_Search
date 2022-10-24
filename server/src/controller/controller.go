@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"server/handler"
 	"server/utils"
 	"time"
@@ -34,5 +35,12 @@ func PutEbayDeletionNotification(writer http.ResponseWriter, request *http.Reque
 	statusClient := utils.InstantiateClient("GET_status")
 	clientErr := statusClient.EchoSend("info", request.Method)
 	handler.ClientErrorCheck(clientErr)
-	fmt.Println(fmt.Sprintf("Method:%v\nHeader:%v\nBody:%v", request.Method, request.Header, request.Body))
+
+	switch request.Header.Get("Authorization") {
+	case os.Getenv("VERIFICATION_TOKEN"):
+		fmt.Println(fmt.Sprintf("Method:%v\nHeader:%v\nBody:%v", request.Method, request.Header, request.Body))
+		return
+	default:
+		http.Error(writer, "Invalid verification token", http.StatusUnauthorized)
+	}
 }
