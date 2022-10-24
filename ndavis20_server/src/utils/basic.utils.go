@@ -12,6 +12,7 @@ import (
 	"io"
 	"log"
 	"ndavis20_server/handler"
+	"net"
 	"net/http"
 	"os"
 	"regexp"
@@ -79,4 +80,22 @@ func GetBytes(response *http.Response, client *loggly.ClientType) []byte {
 	}
 
 	return bodyBytes
+}
+
+// Get preferred outbound ip of this machine
+func GetOutboundIP() net.IP {
+	connection, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func(conn *net.Conn) {
+		err := (*conn).Close()
+		if err != nil {
+
+		}
+	}(&connection)
+
+	localAddr := connection.LocalAddr().(*net.UDPAddr)
+
+	return localAddr.IP
 }
