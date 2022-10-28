@@ -16,7 +16,7 @@ var userName = "curiossity"
 func Run() {
 
 	//if running on a local machine use the .env file
-	utils.LoadDotEnv(".env")
+	utils.LoadDotEnv("../.env")
 	// Instantiate Clients
 	animeClient := utils.InstantiateClient("anime_search")
 	ebayClient := utils.InstantiateClient("ebay_search")
@@ -40,6 +40,6 @@ func Run() {
 
 		fmt.Println(ebayItems)
 		fmt.Println("---END---")
-		time.Sleep(10 * time.Second)
+		time.Sleep(2 * time.Hour)
 	}
 }

@@ -28,8 +28,9 @@ const (
 
 	// search function constant variables
 
-	EbayRoot           = "https://api.sandbox.ebay.com/buy/browse/v1/"
-	EbaySearchEndpoint = "item_summary/search?q=%s+anime&offset=%d&limit=%d&sort=%s" // EbaySearchEndpoint URI parameters: q, offset, limit, sort
+	EbayRoot_Sandbox    = "https://api.sandbox.ebay.com/buy/browse/v1/"
+	EbayRoot_Production = "https://api.ebay.com/buy/browse/v1/"
+	EbaySearchEndpoint  = "item_summary/search?q=%s+anime&offset=%d&limit=%d&sort=%s" // EbaySearchEndpoint URI parameters: q, offset, limit, sort
 
 	// Ebay Search Headers
 
@@ -40,7 +41,8 @@ const (
 
 	// tokenGenerator function constant variables
 
-	EbayTokenGeneratorEndpoint = "https://api.sandbox.ebay.com/identity/v1/oauth2/token?"
+	EbayTokenGeneratorEndpoint_SandBox    = "https://api.sandbox.ebay.com/identity/v1/oauth2/token?"
+	EbayTokenGeneratorEndpoint_Production = "https://api.ebay.com/identity/v1/oauth2/token?"
 
 	// Ebay Oauth Token Generator Body
 
@@ -55,7 +57,7 @@ const (
 
 func Search(q string, offset int, limit int, sort string) (response *http.Response, err error) {
 	client := &http.Client{}
-	req, _ := http.NewRequest("GET", EbayRoot+F(EbaySearchEndpoint, q, offset, limit, sort), nil)
+	req, _ := http.NewRequest("GET", EbayRoot_Production+F(EbaySearchEndpoint, q, offset, limit, sort), nil)
 	req.Header.Set(EbayCMarketplaceIdKey, EbayCMarketplaceIdValueUs)
 	req.Header.Set(ContentType, ApplicationJson)
 	req.Header.Set(XEbayCEnduserctxKey, XEbayCEnduserctxValue)
@@ -82,9 +84,9 @@ func TokenGenerator(wg *sync.WaitGroup) {
 
 	// make http request to ebay oauth generator endpoint
 	client := &http.Client{}
-	req, _ := http.NewRequest("POST", EbayTokenGeneratorEndpoint, strings.NewReader(encodedBody))
+	req, _ := http.NewRequest("POST", EbayTokenGeneratorEndpoint_Production, strings.NewReader(encodedBody))
 	req.Header.Set(ContentType, XWwwFormUrlencoded)
-	req.Header.Set(Authorization, os.Getenv("EBAY_CREDENTIALS"))
+	req.Header.Set(Authorization, os.Getenv("EBAY_CREDENTIALS_PRODUCTION"))
 	response, err := client.Do(req)
 	handler.HttpErrorCheck(err, tokenGenClient)
 
