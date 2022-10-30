@@ -18,6 +18,8 @@ and can exhaust a table's read capacity units and throttle user requests. If you
 */
 func GetLiveStatus(writer http.ResponseWriter, request *http.Request) {
 	tableName := os.Getenv("DYNAMO_DB_TABLE_NAME")
+	liveCount := request.FormValue("liveCount")
+
 	status := model.Status{
 		TableName:   tableName,
 		RecordCount: *utils.GetLiveItemCount(tableName),
@@ -45,7 +47,7 @@ func ReceiveEbayDeleteNotif(writer http.ResponseWriter, request *http.Request) {
 func GetAll(writer http.ResponseWriter, request *http.Request) {
 	table := request.FormValue("table")
 
-	if !utils.CheckTableRegex(table, writer) {
+	if !service.CheckTableRegex(table, writer) {
 		return
 	}
 
@@ -59,7 +61,7 @@ func Search(writer http.ResponseWriter, request *http.Request) {
 	userId := request.FormValue("user_id")
 	itemId := request.FormValue("item_id")
 
-	if !(utils.CheckTableRegex(table, writer) && utils.CheckUserIdReg(userId, writer) && utils.CheckItemIdReg(itemId, writer)) {
+	if !(service.CheckTableRegex(table, writer) && service.CheckUserIdReg(userId, writer) && service.CheckItemIdReg(itemId, writer)) {
 		return
 	}
 
