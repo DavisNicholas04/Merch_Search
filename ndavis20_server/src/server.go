@@ -12,6 +12,7 @@ func main() {
 	utils.LoadDotEnv("../.env")
 
 	service.NewRoute().
+
 		// Create a new set of routes with the Path prefix /ndavis20
 		Prefix("/ndavis20").
 
