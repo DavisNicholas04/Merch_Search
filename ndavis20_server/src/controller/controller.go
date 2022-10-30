@@ -5,6 +5,7 @@ import (
 	"ndavis20_server/utils"
 	"net/http"
 	"os"
+	"strings"
 )
 
 /*
@@ -27,7 +28,7 @@ and can exhaust a table's read capacity units and throttle user requests. If you
 liveCount to true.
 */
 func GetStatus(writer http.ResponseWriter, request *http.Request) {
-	liveCount := request.FormValue("liveCount")
+	liveCount := strings.ToLower(request.FormValue("liveCount"))
 
 	if !service.CheckLiveCountRegex(liveCount, writer) {
 		return
