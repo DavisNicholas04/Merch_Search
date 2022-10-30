@@ -1,5 +1,6 @@
 package model
 
+// UserEntry : Top level type struct for items returned from dynamodb
 type UserEntry struct {
 	UserId        string        `json:"user_id"`
 	ItemId        string        `json:"item_id"`
