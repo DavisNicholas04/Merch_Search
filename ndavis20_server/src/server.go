@@ -26,5 +26,4 @@ func main() {
 
 	// open a https listener with selfsigned certs on port 8080
 	log.Fatalln(http.ListenAndServeTLS(":8080", "../34.207.90.86.crt", "../34.207.90.86.key", nil))
-	//log.Fatalln(http.ListenAndServe(":8080", nil))
 }
