@@ -1,13 +1,17 @@
 package controller
 
 import (
+	"ndavis20_server/model"
 	"ndavis20_server/service"
+	"ndavis20_server/utils"
 	"net/http"
 	"os"
+	"time"
 )
 
 func GetStatus(writer http.ResponseWriter, request *http.Request) {
-	service.EncodeJson(writer, "GET_status")
+	status := model.Status{SystemTime: time.Now()}
+	service.EncodeJson(status, writer, "GET_status")
 }
 
 func PutEbayDeletionNotification(writer http.ResponseWriter, request *http.Request) {
@@ -19,5 +23,26 @@ func PutEbayDeletionNotification(writer http.ResponseWriter, request *http.Reque
 }
 
 func GetAll(writer http.ResponseWriter, request *http.Request) {
-	writer.Write([]byte(request.RequestURI + "\n" + request.RemoteAddr + "\n" + request.Host))
+	table := request.FormValue("table")
+
+	if !utils.CheckTableRegex(table, writer) {
+		return
+	}
+
+	items := utils.GetAllItems(table)
+	service.EncodeJson(items, writer, "GET_getAll")
+}
+
+func Search(writer http.ResponseWriter, request *http.Request) {
+	table := request.FormValue("table")
+	itemId := request.FormValue("item_id")
+	userId := request.FormValue("user_id")
+
+	if !utils.CheckAgainstRegSearch(table, itemId, userId, writer) {
+		return
+	}
+
+	searchedItem := utils.FindItem(table, userId, itemId)
+
+	service.EncodeJson(searchedItem, writer, "GET_search")
 }
