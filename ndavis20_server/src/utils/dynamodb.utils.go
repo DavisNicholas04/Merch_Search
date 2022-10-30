@@ -61,23 +61,42 @@ GetLiveItemCount : Returns the number of items in the specified dynamodb table
 
 WARNING:
 
-Utilizes dynamodb.DynamoDB.Scan()
+Utilizes dynamodb.DynamoDB.Scan() which retrieves every item from the specified dynamodb table.
+If you do not need a live item count use GetItemCount which is guaranteed to be updated every 6 hours.
 */
 func GetLiveItemCount(tableName string) *int64 {
-	ItemCountClient := InstantiateClient("service.ddbUtils.scan")
+	LiveItemCountClient := InstantiateClient("service.ddbUtils.scan")
 	dynamodbClient := createDynamoDBClient()
 
 	items, err := dynamodbClient.Scan(&dynamodb.ScanInput{
 		TableName: aws.String(tableName),
 	})
 	if err != nil {
-		log.Println(ItemCountClient.EchoSend("error", err.Error()))
+		log.Println(LiveItemCountClient.EchoSend("error", err.Error()))
 	}
 	return items.Count
 }
 
+/*
+GetItemCount : Returns the number of items in the specified dynamodb table
+
+WARNING:
+
+Utilizes dynamodb.DynamoDB.DescribeTable() which is only updated every six hours. If you need a live
+item count use GetLiveItemCount
+*/
 func GetItemCount(tableName string) *int64 {
-	return nil
+	ItemCountClient := InstantiateClient("service.ddbUtils.scan")
+	dynamodbClient := createDynamoDBClient()
+
+	tableDescription, err := dynamodbClient.DescribeTable(&dynamodb.DescribeTableInput{
+		TableName: aws.String(tableName),
+	})
+	if err != nil {
+		log.Println(ItemCountClient.EchoSend("error", err.Error()))
+	}
+
+	return tableDescription.Table.ItemCount
 }
 
 func scan(tableName string) *dynamodb.ScanOutput {
