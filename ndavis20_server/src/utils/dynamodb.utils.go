@@ -10,9 +10,11 @@ import (
 	"log"
 	"ndavis20_server/model"
 	"net/http"
+	"os"
 	"regexp"
 )
 
+// createDynamoDBClient: Creates and returns a new dynamodb session client
 func createDynamoDBClient() *dynamodb.DynamoDB {
 	dynamodbLoggly := InstantiateClient("server.DynamoDB.create.client")
 	ddbSession := session.Must(
@@ -30,6 +32,10 @@ func createDynamoDBClient() *dynamodb.DynamoDB {
 	return dynamodbClient
 }
 
+/*
+FindItem : Uses getItem() to find and return a go object representation of a single item from
+the specified dynamodb table.
+*/
 func FindItem(tableName string, userId string, itemId string) *model.UserEntry {
 	findItemClient := InstantiateClient("service.ddbUtils.findItem")
 	dynamodbItem, err := getItem(tableName, userId, itemId)
@@ -40,6 +46,9 @@ func FindItem(tableName string, userId string, itemId string) *model.UserEntry {
 	return goObjItem
 }
 
+/*
+GetAllItems : uses dynamodb.DynamoDB.Scan() to return all items from the specified table.
+*/
 func GetAllItems(tableName string) []*model.UserEntry {
 	scannedItems := scan(tableName)
 	goObjItem := unmarshallDynamodbObjMulti(scannedItems)
@@ -47,7 +56,14 @@ func GetAllItems(tableName string) []*model.UserEntry {
 	return goObjItem
 }
 
-func GetItemCount(tableName string) *int64 {
+/*
+GetLiveItemCount : Returns the number of items in the specified dynamodb table
+
+WARNING:
+
+Utilizes dynamodb.DynamoDB.Scan()
+*/
+func GetLiveItemCount(tableName string) *int64 {
 	ItemCountClient := InstantiateClient("service.ddbUtils.scan")
 	dynamodbClient := createDynamoDBClient()
 
@@ -58,6 +74,10 @@ func GetItemCount(tableName string) *int64 {
 		log.Println(ItemCountClient.EchoSend("error", err.Error()))
 	}
 	return items.Count
+}
+
+func GetItemCount(tableName string) *int64 {
+	return nil
 }
 
 func scan(tableName string) *dynamodb.ScanOutput {
@@ -73,6 +93,7 @@ func scan(tableName string) *dynamodb.ScanOutput {
 	return items
 }
 
+// getItem: this and that
 func getItem(tableName string, userId string, itemId string) (*dynamodb.GetItemOutput, error) {
 	dynamodbClient := createDynamoDBClient()
 	result, err := dynamodbClient.GetItem(&dynamodb.GetItemInput{
@@ -146,8 +167,35 @@ func CheckAgainstRegSearch(table string, itemId string, userId string, writer ht
 	return true
 }
 
+func CheckItemIdReg(itemId string, writer http.ResponseWriter) bool {
+	itemIdReg, _ := regexp.Compile("^((v[0-9])\\|([0-9]{1,12})\\|([0-9]{1,12}))$")
+	if !itemIdReg.MatchString(itemId) {
+		http.Error(
+			writer,
+			"Malformed request, check your itemId",
+			http.StatusBadRequest,
+		)
+		return false
+	}
+	return true
+}
+
+func CheckUserIdReg(userId string, writer http.ResponseWriter) bool {
+	userIdReg, _ := regexp.Compile("[a-zA-z0-9_-]{2,16}")
+
+	if !userIdReg.MatchString(userId) {
+		http.Error(
+			writer,
+			"Malformed request, check your userId",
+			http.StatusBadRequest,
+		)
+		return false
+	}
+	return true
+}
+
 func CheckTableRegex(table string, writer http.ResponseWriter) bool {
-	tableReg, _ := regexp.Compile("ndavis20-merchSearch")
+	tableReg, _ := regexp.Compile(os.Getenv("DYNAMO_DB_TABLE_NAME"))
 
 	if !tableReg.MatchString(table) {
 		http.Error(
