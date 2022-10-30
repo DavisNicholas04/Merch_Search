@@ -47,6 +47,19 @@ func GetAllItems(tableName string) []*model.UserEntry {
 	return goObjItem
 }
 
+func GetItemCount(tableName string) *int64 {
+	ItemCountClient := InstantiateClient("service.ddbUtils.scan")
+	dynamodbClient := createDynamoDBClient()
+
+	items, err := dynamodbClient.Scan(&dynamodb.ScanInput{
+		TableName: aws.String(tableName),
+	})
+	if err != nil {
+		log.Println(ItemCountClient.EchoSend("error", err.Error()))
+	}
+	return items.Count
+}
+
 func scan(tableName string) *dynamodb.ScanOutput {
 	scanItemsClient := InstantiateClient("service.ddbUtils.scan")
 	dynamodbClient := createDynamoDBClient()
