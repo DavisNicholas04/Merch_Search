@@ -25,6 +25,9 @@ func main() {
 		Method("PUT").
 		CreateEndpoint("/ebay/deletion_notification", controller.ReceiveEbayDeleteNotif)
 
-	// open a https listener with selfsigned certs on port 8080
-	log.Fatalln(http.ListenAndServeTLS(":8080", "../34.207.90.86.crt", "../34.207.90.86.key", nil))
+	// open an https listener with selfsigned certs on port 8080
+	//log.Fatalln(http.ListenAndServeTLS(":8080", "../34.207.90.86.crt", "../34.207.90.86.key", nil))
+
+	// open an http listener
+	log.Fatalln(http.ListenAndServe(":8080", nil))
 }
