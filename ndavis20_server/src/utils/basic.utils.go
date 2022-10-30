@@ -6,29 +6,15 @@ package utils
 
 import (
 	"errors"
-	"fmt"
 	"github.com/jamespearly/loggly"
 	"github.com/joho/godotenv"
-	"io"
 	"log"
-	"ndavis20_server/handler"
 	"net"
-	"net/http"
 	"os"
-	"regexp"
 )
 
 func InstantiateClient(tag string) *loggly.ClientType {
 	return loggly.New(tag)
-}
-
-func RemoveNonAlphaNums(str string) string {
-	var nonAlphanumericRegex = regexp.MustCompile(`[^a-zA-Z0-9 ]+`)
-	return nonAlphanumericRegex.ReplaceAllString(str, "")
-}
-
-func Second(key string, isExist bool) bool {
-	return isExist
 }
 
 func FileExist(file string) bool {
@@ -49,37 +35,6 @@ func LoadDotEnv(filenames ...string) {
 			}
 		}
 	}
-}
-
-func deferResponseBodyClose(response *http.Response) {
-	defer func() {
-		err := response.Body.Close()
-		if err != nil {
-			log.Fatalln(err)
-		}
-	}()
-}
-
-func GetBytes(response *http.Response, client *loggly.ClientType) []byte {
-	bodyBytes, readBytesErr := io.ReadAll(response.Body)
-	handler.ReadBytesErrorCheck(readBytesErr, client)
-
-	deferResponseBodyClose(response)
-
-	if response.StatusCode == 200 {
-		// send loggly msg
-		clientErr := client.EchoSend(
-			"info", fmt.Sprintf("statusCode: %v\nresponseSize: %v", response.StatusCode, len(bodyBytes)),
-		)
-		handler.ClientErrorCheck(clientErr)
-	} else {
-		clientErr := client.EchoSend(
-			"info", fmt.Sprintf("statusCode: %v\nresponseSize: %v\nresponse: ", response.StatusCode, len(bodyBytes), string(bodyBytes)),
-		)
-		handler.ClientErrorCheck(clientErr)
-	}
-
-	return bodyBytes
 }
 
 // Get preferred outbound ip of this machine
