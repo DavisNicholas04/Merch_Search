@@ -19,11 +19,12 @@ func main() {
 		Method("GET").
 		CreateEndpoint("/get_all", controller.GetAll).
 		CreateEndpoint("/status", controller.GetStatus).
-
+		CreateEndpoint("/search", controller.Search).
 		//Endpoints that accept PUT requests
 		Method("PUT").
 		CreateEndpoint("/ebay/deletion_notification", controller.PutEbayDeletionNotification)
 
 	// open a https listener with selfsigned certs on port 8080
 	log.Fatalln(http.ListenAndServeTLS(":8080", "../34.207.90.86.crt", "../34.207.90.86.key", nil))
+	//log.Fatalln(http.ListenAndServe(":8080", nil))
 }
