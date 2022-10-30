@@ -57,7 +57,6 @@ func (route *route) verifyMethod(writer http.ResponseWriter, r *http.Request) {
 		return
 	}
 	route.handler(writer, r)
-	SendStatus(r, http.StatusOK)
 }
 
 /*
