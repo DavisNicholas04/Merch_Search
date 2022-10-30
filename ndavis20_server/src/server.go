@@ -18,7 +18,7 @@ func main() {
 		// Endpoints that accept GET requests
 		Method("GET").
 		CreateEndpoint("/get_all", controller.GetAll).
-		CreateEndpoint("/status", controller.GetLiveStatus).
+		CreateEndpoint("/status", controller.GetStatus).
 		CreateEndpoint("/search", controller.Search).
 		//Endpoints that accept PUT requests
 		Method("PUT").

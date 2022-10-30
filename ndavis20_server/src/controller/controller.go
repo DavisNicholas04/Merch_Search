@@ -8,14 +8,14 @@ import (
 )
 
 /*
-GetLiveStatus : Returns the name of the dynamodb table being searched and the number of items present
+GetStatus : Returns the name of the dynamodb table being searched and the number of items present
 
 WARNING:
 
 This function uses dynamodb's scan operation which reads every item in the table. It is expensive and inefficient
 and can exhaust a table's read capacity units and throttle user requests. If you do not need a live count DO NOT use this function.
 */
-func GetLiveStatus(writer http.ResponseWriter, request *http.Request) {
+func GetStatus(writer http.ResponseWriter, request *http.Request) {
 	liveCount := request.FormValue("liveCount")
 
 	if !service.CheckLiveCountRegex(liveCount, writer) {
