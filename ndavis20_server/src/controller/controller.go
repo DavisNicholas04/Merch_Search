@@ -6,11 +6,14 @@ import (
 	"ndavis20_server/utils"
 	"net/http"
 	"os"
-	"time"
 )
 
 func GetStatus(writer http.ResponseWriter, request *http.Request) {
-	status := model.Status{SystemTime: time.Now()}
+	tableName := os.Getenv("DYNAMO_DB_TABLE_NAME")
+	status := model.Status{
+		TableName:   tableName,
+		RecordCount: *utils.GetItemCount(tableName),
+	}
 	service.EncodeJson(status, writer, "GET_status")
 }
 
