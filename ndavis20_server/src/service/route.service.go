@@ -56,8 +56,8 @@ func (route *route) verifyMethod(writer http.ResponseWriter, r *http.Request) {
 		SendStatus(r, http.StatusMethodNotAllowed)
 		return
 	}
-	SendStatus(r, http.StatusOK)
 	route.handler(writer, r)
+	SendStatus(r, http.StatusOK)
 }
 
 /*
