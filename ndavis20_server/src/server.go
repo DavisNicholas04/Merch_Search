@@ -11,8 +11,8 @@ import (
 func main() {
 	utils.LoadDotEnv("../.env")
 
-	// Create a new set of routes with the Path prefix /ndavis20
 	service.NewRoute().
+		// Create a new set of routes with the Path prefix /ndavis20
 		Prefix("/ndavis20").
 
 		// Endpoints that accept GET requests
