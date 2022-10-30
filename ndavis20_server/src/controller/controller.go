@@ -10,10 +10,21 @@ import (
 /*
 GetStatus : Returns the name of the dynamodb table being searched and the number of items present
 
+Takes in a query_param "liveCount" which can be set to true or false (If liveCount is not set,
+it will default to false).
+
+liveCount=false: When liveCount equals false, dynamodb's DescribeTable() is used which returns metrics that
+are updated every 6 hours for the specified table. This means that the count returned may not be accurate. Use liveCount=true
+if you need live metrics
+
+liveCount=true: When liveCount equals false, dynamodb's Scan() is used which return live metrics for
+the specified table.
+
 WARNING:
 
-This function uses dynamodb's scan operation which reads every item in the table. It is expensive and inefficient
-and can exhaust a table's read capacity units and throttle user requests. If you do not need a live count DO NOT use this function.
+liveCount=true uses dynamodb's Scan() operation which reads every item in the table. It is expensive and inefficient
+and can exhaust a table's read capacity units and throttle user requests. If you do not need a live count DO NOT set
+liveCount to true.
 */
 func GetStatus(writer http.ResponseWriter, request *http.Request) {
 	liveCount := request.FormValue("liveCount")
