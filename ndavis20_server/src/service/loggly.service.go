@@ -6,12 +6,11 @@ import (
 	"ndavis20_server/model"
 	"ndavis20_server/utils"
 	"net/http"
-	"time"
 )
 
-func EncodeJson(writer http.ResponseWriter, logglyTag string) {
-	status := model.Status{SystemTime: time.Now()}
-	encoderErr := json.NewEncoder(writer).Encode(status)
+func EncodeJson(obj interface{}, writer http.ResponseWriter, logglyTag string) {
+	//status := model.Status{SystemTime: time.Now()}
+	encoderErr := json.NewEncoder(writer).Encode(obj)
 	if encoderErr != nil {
 		statusClient := utils.InstantiateClient(logglyTag)
 		clientErr := statusClient.EchoSend("error", encoderErr.Error())
