@@ -47,7 +47,7 @@ func CheckTableRegex(table string, writer http.ResponseWriter) bool {
 func CheckLiveCountRegex(liveCount string, writer http.ResponseWriter) bool {
 	liveCountReg, _ := regexp.Compile("^(true|false)$")
 	if !liveCountReg.MatchString(liveCount) && liveCount != "" {
-		http.Error(writer, "Malformed request, check your userId", http.StatusBadRequest)
+		http.Error(writer, "Malformed request, liveCount can only equal true or false", http.StatusBadRequest)
 		return false
 	}
 	return true
