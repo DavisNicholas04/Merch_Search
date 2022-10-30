@@ -16,24 +16,27 @@ type DynamoDBRepo struct {
 }
 
 func CreateDynamoDBClient() *dynamodb.DynamoDB {
-	session := session.Must(
+	dynamodbLoggly := InstantiateClient("polling_agent.DynamoDB.create.client")
+
+	ddbSession := session.Must(
 		session.NewSessionWithOptions(
 			session.Options{
 				SharedConfigState: session.SharedConfigEnable,
 			}))
+	dynamodbClient := dynamodb.New(ddbSession)
+	err := dynamodbLoggly.EchoSend("info", "client created")
+	if err != nil {
+		log.Println(err)
+	}
+
 	// Create an Amazon S3 service client
-	return dynamodb.New(session)
+	return dynamodbClient
 }
 
 func (repo *DynamoDBRepo) Save(post *model.UserEntry, wg *sync.WaitGroup) (*model.UserEntry, error) {
-	dynamodbLoggly := InstantiateClient("DynamoDB.create.client")
 	dynamodbputLoggly := InstantiateClient("DynamoDB.put.item")
 	// creation of a new DynamoDb client
 	dynamodbClient := CreateDynamoDBClient()
-	err := dynamodbLoggly.EchoSend("info", "client created")
-	if err != nil {
-		return nil, err
-	}
 	attributeVal, err := dynamodbattribute.MarshalMap(post)
 	if err != nil {
 		log.Fatalf("Got error marshalling new movie item: %s", err)
