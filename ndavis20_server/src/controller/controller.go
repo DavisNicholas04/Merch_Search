@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"ndavis20_server/model"
 	"ndavis20_server/service"
 	"ndavis20_server/utils"
 	"net/http"
@@ -17,13 +16,13 @@ This function uses dynamodb's scan operation which reads every item in the table
 and can exhaust a table's read capacity units and throttle user requests. If you do not need a live count DO NOT use this function.
 */
 func GetLiveStatus(writer http.ResponseWriter, request *http.Request) {
-	tableName := os.Getenv("DYNAMO_DB_TABLE_NAME")
 	liveCount := request.FormValue("liveCount")
 
-	status := model.Status{
-		TableName:   tableName,
-		RecordCount: *utils.GetLiveItemCount(tableName),
+	if !service.CheckLiveCountRegex(liveCount, writer) {
+		return
 	}
+
+	status := service.GetStatus(liveCount)
 	service.EncodeJson(status, writer, "GET_status")
 }
 
