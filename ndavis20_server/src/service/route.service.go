@@ -77,6 +77,11 @@ func (route *route) handleRoute(endpoint string, handler func(http.ResponseWrite
 CreateEndpoint : Creates a new route and appends it to the root route's slice of routes
 */
 func (route *route) CreateEndpoint(endpoint string, handler func(http.ResponseWriter, *http.Request)) *route {
-	route.routes = append(route.routes, NewRoute().Method(route.method).Prefix(route.prefix).handleRoute(endpoint, handler))
+	route.routes = append(
+		route.routes,
+		NewRoute().
+			Method(route.method).
+			Prefix(route.prefix).
+			handleRoute(endpoint, handler))
 	return route
 }
