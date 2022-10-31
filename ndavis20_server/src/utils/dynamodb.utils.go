@@ -148,12 +148,11 @@ func unmarshallDynamodbObj(result *dynamodb.GetItemOutput) *model.UserEntry {
 
 func unmarshallDynamodbObjMulti(result *dynamodb.ScanOutput) []*model.UserEntry {
 	var items []*model.UserEntry
-	for count, i := range result.Items {
-		items = append(items, &model.UserEntry{})
-		err := dynamodbattribute.UnmarshalMap(i, &items[count])
-		if err != nil {
-			log.Println(fmt.Sprintf("Failed to unmarshal Record, %v", err))
-		}
+
+	err := dynamodbattribute.UnmarshalListOfMaps(result.Items, &items)
+	if err != nil {
+		log.Println(fmt.Sprintf("Failed to unmarshal Record, %v", err))
 	}
+
 	return items
 }
