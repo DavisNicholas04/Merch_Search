@@ -58,9 +58,12 @@ func ReceiveEbayDeleteNotif(writer http.ResponseWriter, request *http.Request) {
 func GetAll(writer http.ResponseWriter, request *http.Request) {
 	table := request.FormValue("table")
 
+	/* COMMENTED OUT TO MEET A10 REQUIREMENTS
+
 	if !service.CheckTableRegex(table, writer) {
 		return
 	}
+	*/
 
 	items := utils.GetAllItems(table)
 	service.EncodeJson(items, writer, "GET_getAll")
