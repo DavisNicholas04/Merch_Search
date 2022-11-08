@@ -19,7 +19,7 @@ func CheckItemIdReg(itemId string, writer http.ResponseWriter) bool {
 }
 
 func CheckUserIdReg(userId string, writer http.ResponseWriter) bool {
-	userIdReg, _ := regexp.Compile("[a-zA-z0-9_-]{2,16}")
+	userIdReg, _ := regexp.Compile("^[a-zA-z0-9_-]{2,16}$")
 
 	if !userIdReg.MatchString(userId) {
 		http.Error(
@@ -30,7 +30,7 @@ func CheckUserIdReg(userId string, writer http.ResponseWriter) bool {
 }
 
 func CheckTableRegex(table string, writer http.ResponseWriter) bool {
-	tableReg, _ := regexp.Compile(os.Getenv("DYNAMO_DB_TABLE_NAME"))
+	tableReg, _ := regexp.Compile("^" + os.Getenv("DYNAMO_DB_TABLE_NAME") + "$")
 
 	if !tableReg.MatchString(table) {
 		http.Error(
