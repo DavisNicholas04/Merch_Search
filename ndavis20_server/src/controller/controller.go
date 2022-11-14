@@ -56,7 +56,8 @@ func ReceiveEbayDeleteNotif(writer http.ResponseWriter, request *http.Request) {
 
 // GetAll : Returns all items from the dynamodb table in a json file following the type struct model.UserEntry's format
 func GetAll(writer http.ResponseWriter, request *http.Request) {
-	table := request.FormValue("table")
+	//table := request.FormValue("table")
+	table := "ndavis20-merchSearch"
 
 	/* COMMENTED OUT TO MEET A10 REQUIREMENTS
 
