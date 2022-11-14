@@ -38,6 +38,7 @@ func Run() {
 		DynamoItems := utils.EbayListToUserEntryList(&ebayItems, userName)
 		_, _ = dynamodbTable.SaveMultiple(DynamoItems)
 
+		// print searched ebay items for logs
 		fmt.Println(ebayItems)
 		fmt.Println("---END---")
 		time.Sleep(2 * time.Hour)
