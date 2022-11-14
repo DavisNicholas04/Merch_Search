@@ -55,6 +55,7 @@ const (
 	TagRoot = "controller.ebay.controller.go."
 )
 
+// Search : searches ebay for items with four params passed into the url.
 func Search(q string, offset int, limit int, sort string) (response *http.Response, err error) {
 	client := &http.Client{}
 	req, _ := http.NewRequest("GET", EbayRoot_Production+F(EbaySearchEndpoint, q, offset, limit, sort), nil)
