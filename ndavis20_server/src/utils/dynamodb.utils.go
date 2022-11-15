@@ -109,7 +109,7 @@ func scan(tableName string) *dynamodb.ScanOutput {
 	return items
 }
 
-// getItem: this and that
+// getItem: Searches the dynamodb table for a specific item, and returns the dynamodb.GetItemOutput
 func getItem(tableName string, userId string, itemId string) (*dynamodb.GetItemOutput, error) {
 	dynamodbClient := createDynamoDBClient()
 	result, err := dynamodbClient.GetItem(&dynamodb.GetItemInput{
