@@ -1,6 +1,6 @@
 # MERCH SEARCH
 
-Get ebay merchandise suggestions of anime you've watched.
+Get ebay merchandise suggestions from anime you've logged on MyAnimeList.
 
 ### Purpose:
 
