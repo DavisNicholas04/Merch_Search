@@ -1,7 +1,8 @@
 # MERCH SEARCH
 
-Purpose:
+### Purpose:
 
-Functionality:
+### Functionality:
 
-Stack:
+### Stack:
+
