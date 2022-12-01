@@ -41,6 +41,6 @@ func Run() {
 		// print searched ebay items for logs
 		fmt.Println(ebayItems)
 		fmt.Println("---END---")
-		time.Sleep(2 * time.Hour)
+		time.Sleep(1 * time.Hour)
 	}
 }
